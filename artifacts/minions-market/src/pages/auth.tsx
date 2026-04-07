@@ -50,7 +50,8 @@ export default function AuthPage() {
 
   const handleRequestCode = () => {
     if (!telegramUsername.trim()) return;
-    requestCodeMutation.mutate({ data: { telegramUsername: telegramUsername.trim() } }, {
+    const normalizedUsername = telegramUsername.trim().replace(/^@/, "").toLowerCase();
+    requestCodeMutation.mutate({ data: { telegramUsername: normalizedUsername } }, {
       onSuccess: (res) => {
         setCodeSent(true);
         if (res.botUsername) setBotUsername(res.botUsername);
@@ -74,7 +75,8 @@ export default function AuthPage() {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    registerMutation.mutate({ data: { username, password, code, telegramUsername } }, {
+    const normalizedUsername = telegramUsername.trim().replace(/^@/, "").toLowerCase();
+    registerMutation.mutate({ data: { username, password, code, telegramUsername: normalizedUsername } }, {
       onSuccess: (res) => {
         setAuth(res.token, res.user);
         toast({ title: t("registerSuccess") });
@@ -183,7 +185,7 @@ export default function AuthPage() {
               <Input value={code} onChange={(e) => setCode(e.target.value)} placeholder={t("authCode")} data-testid="input-code" />
               <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder={t("username")} data-testid="input-reg-username" />
               <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("password")} data-testid="input-reg-password" />
-              <Button type="submit" className="w-full h-11" disabled={registerMutation.isPending} data-testid="button-register">
+              <Button type="submit" className="w-full h-11" disabled={registerMutation.isPending || !codeSent} data-testid="button-register">
                 {registerMutation.isPending ? t("loading") : t("register")}
               </Button>
             </form>
