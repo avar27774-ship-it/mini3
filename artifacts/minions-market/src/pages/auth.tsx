@@ -63,8 +63,14 @@ export default function AuthPage() {
     requestCodeMutation.mutate({ data: { telegramUsername: normalizedUsername } }, {
       onSuccess: (res) => {
         setCodeSent(true);
-        if (res.botUsername) setBotUsername(res.botUsername);
-        if ((res as any).directMessageSent) setDirectMessageSent(true);
+        const bot = (res as any).botUsername || botUsername;
+        if (bot) setBotUsername(bot);
+        if ((res as any).directMessageSent) {
+          setDirectMessageSent(true);
+        } else if (bot) {
+          // FIX: сразу открываем бота с параметром username — бот сам найдёт код
+          window.open(`https://t.me/${bot}?start=${normalizedUsername}`, "_blank");
+        }
         toast({ title: t("codeSent") });
       },
       onError: () => toast({ title: t("error"), variant: "destructive" }),
@@ -197,16 +203,16 @@ export default function AuthPage() {
                   ) : (
                     <>
                       <p className="text-xs text-success flex items-center gap-1">
-                        <Shield className="w-3 h-3" /> Откройте бота и напишите /start чтобы получить код.
+                        <Shield className="w-3 h-3" /> Бот открыт — проверьте Telegram, там уже есть код.
                       </p>
                       {botUsername && (
                         <a
-                          href={`https://t.me/${botUsername}?start=code`}
+                          href={`https://t.me/${botUsername}?start=${telegramUsername.replace(/^@/, "").toLowerCase()}`}
                           target="_blank"
                           rel="noreferrer"
                           className="text-xs text-primary underline flex items-center gap-1"
                         >
-                          <Send className="w-3 h-3" /> Открыть @{botUsername} и написать /start
+                          <Send className="w-3 h-3" /> Открыть @{botUsername} снова
                         </a>
                       )}
                     </>
